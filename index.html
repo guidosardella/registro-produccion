@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://*.supabase.co https://script.google.com https://script.googleusercontent.com data: blob:; connect-src 'self' https://*.supabase.co https://script.google.com https://script.googleusercontent.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:">
 <title>Registro de Producción | Pasta</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -879,57 +880,7 @@ function saveRec(status) {
     status
   };
 
-  // Update local records
-  if(curId===null) {
-    const rec={id:'new_' + Date.now(), createdAt:new Date().toISOString(),
-      status, lote,
-      fecha:         document.getElementById('fFecha').value,
-      variedad:      document.getElementById('fVariedad').value,
-      formato:       document.getElementById('fFormato').value,
-      loteSemola:    document.getElementById('fLoteSemola').value,
-      loteVariedad:  document.getElementById('fLoteVariedad').value,
-      secador:       document.getElementById('fSecador').value,
-      programa:      document.getElementById('fPrograma').value,
-      tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
-      molde:         document.getElementById('fMolde').value,
-      hum1:          document.getElementById('fHum1').value,
-      hum2:          document.getElementById('fHum2').value,
-      hum3:          document.getElementById('fHum3').value,
-      humFinal:      document.getElementById('fHumFinal').textContent,
-      cantEnv:       document.getElementById('fCantEnv').value,
-      cantNoEnv:     document.getElementById('fCantNoEnv').value,
-      obs:           document.getElementById('fObs').value,
-      operador:      document.getElementById('fOperador').value,
-      closedAt:      status==='closed' ? new Date().toISOString() : null
-    };
-    records.unshift(rec); curId='lote:'+lote;
-  } else {
-    const idx=records.findIndex(r=>r.lote===lote||r.id===curId);
-    if(idx!==-1) records[idx]={...records[idx],
-      status, lote,
-      fecha:         document.getElementById('fFecha').value,
-      variedad:      document.getElementById('fVariedad').value,
-      formato:       document.getElementById('fFormato').value,
-      loteSemola:    document.getElementById('fLoteSemola').value,
-      loteVariedad:  document.getElementById('fLoteVariedad').value,
-      secador:       document.getElementById('fSecador').value,
-      programa:      document.getElementById('fPrograma').value,
-      tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
-      molde:         document.getElementById('fMolde').value,
-      hum1:          document.getElementById('fHum1').value,
-      hum2:          document.getElementById('fHum2').value,
-      hum3:          document.getElementById('fHum3').value,
-      humFinal:      document.getElementById('fHumFinal').textContent,
-      cantEnv:       document.getElementById('fCantEnv').value,
-      cantNoEnv:     document.getElementById('fCantNoEnv').value,
-      obs:           document.getElementById('fObs').value,
-      operador:      document.getElementById('fOperador').value,
-      closedAt:      status==='closed' ? new Date().toISOString() : (records.find(r=>r.id===curId)||{}).closedAt||null
-    };
-  }
-  saveR();
-
-  // Send to Sheet
+  // Send to Supabase
   const payload = {
     status,
     lote,
@@ -1280,106 +1231,142 @@ function checkSheetUrl(e) {
 }
 
 // ════════════════════════════════════════
-//  LOAD RECORDS FROM SHEET
+//  SUPABASE
 // ════════════════════════════════════════
+const SB_URL = "https://jojsrntfdrdgvnsgvpgc.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvanNybnRmZHJkZ3Zuc2d2cGdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyODczMjEsImV4cCI6MjA5MTg2MzMyMX0.QIhMsYXzGqF9d__5VHlal-nSP5yPCByRZknIWDokqpk";
+const SB_TABLE = "registros_produccion_pasta";
+
+function sbHeaders() {
+  return {
+    'Content-Type':  'application/json',
+    'apikey':        SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Prefer':        'return=representation'
+  };
+}
+
+function toDb(d) {
+  return {
+    status:        d.status       || 'open',
+    fecha:         d.fecha        || null,
+    lote:          d.lote         || '',
+    variedad:      d.variedad     || '',
+    formato:       d.formato      || '',
+    lote_semola:   d.loteSemola   || '',
+    lote_variedad: d.loteVariedad || '',
+    secador:       d.secador      || '',
+    programa:      d.programa     || '',
+    tipo_limpieza: d.tipoLimpieza || '',
+    molde:         d.molde        || '',
+    hum1:          d.hum1         || '',
+    hum2:          d.hum2         || '',
+    hum3:          d.hum3         || '',
+    hum_final:     d.humFinal     || '',
+    cant_env:      d.cantEnv      || '',
+    cant_no_env:   d.cantNoEnv    || '',
+    obs:           d.obs          || '',
+    operador:      d.operador     || '',
+    closed_at:     d.status === 'closed' ? (d.closedAt || new Date().toISOString()) : null,
+    pdf_url:       d.pdfUrl       || ''
+  };
+}
+
+function fromDb(r) {
+  return {
+    id:           r.id            || '',
+    status:       r.status        || 'open',
+    fecha:        r.fecha         || '',
+    lote:         r.lote          || '',
+    variedad:     r.variedad      || '',
+    formato:      r.formato       || '',
+    loteSemola:   r.lote_semola   || '',
+    loteVariedad: r.lote_variedad || '',
+    secador:      r.secador       || '',
+    programa:     r.programa      || '',
+    tipoLimpieza: r.tipo_limpieza || '',
+    molde:        r.molde         || '',
+    hum1:         r.hum1          || '',
+    hum2:         r.hum2          || '',
+    hum3:         r.hum3          || '',
+    humFinal:     r.hum_final     || '',
+    cantEnv:      r.cant_env      || '',
+    cantNoEnv:    r.cant_no_env   || '',
+    obs:          r.obs           || '',
+    operador:     r.operador      || '',
+    closedAt:     r.closed_at     || '',
+    pdfUrl:       r.pdf_url       || '',
+    createdAt:    r.created_at    || ''
+  };
+}
+
 function loadRecordsFromSheet() {
   const listEl = document.getElementById('recList');
   if(listEl) listEl.innerHTML = '<div class="empty"><p style="color:var(--text3);font-family:var(--mono);font-size:13px">Cargando registros...</p></div>';
 
-  fetch(SCRIPT_URL + '?action=get', {
-      redirect: 'follow',
-      headers: { 'Accept': 'application/json, text/javascript, */*' }
-    })
-    .then(r => r.text())
-    .then(text => {
-      // Strip any JSONP wrapper or BOM if present
-      var clean = text.trim().replace(/^﻿/, '');
-      if (clean.startsWith('gsCb') || clean.indexOf('(') < 10) {
-        clean = clean.substring(clean.indexOf('(') + 1, clean.lastIndexOf(')'));
-      }
-      const data = JSON.parse(clean);
-      if (data.ok) {
-        show('sDash');
-        records = (data.records || []).map(r => ({
-          id:           r.id           || '',
-          status:       r.status       || 'open',
-          fecha:        cleanDate(r.fecha),
-          lote:         r.lote         || '',
-          variedad:     r.variedad     || '',
-          formato:      r.formato      || '',
-          loteSemola:   r.loteSemola   || '',
-          loteVariedad: r.loteVariedad || '',
-          secador:      r.secador      || '',
-          programa:     r.programa     || '',
-          tipoLimpieza: r.tipoLimpieza || '',
-          molde:        r.molde        || '',
-          hum1:         r.hum1         || '',
-          hum2:         r.hum2         || '',
-          hum3:         r.hum3         || '',
-          humFinal:     r.humFinal     || '',
-          cantEnv:      r.cantEnv      || '',
-          cantNoEnv:    r.cantNoEnv    || '',
-          obs:          r.obs          || '',
-          operador:     r.operador     || '',
-          closedAt:     r.closedAt     || '',
-          createdAt:    r.fecha        || ''
-        }));
-        renderDash();
-      } else {
-        showLoadError(data.error || 'Error desconocido');
-      }
-    })
-    .catch(err => showLoadError(err.toString()));
+  fetch(SB_URL + '/rest/v1/' + SB_TABLE + '?order=created_at.desc', {
+    headers: sbHeaders()
+  })
+  .then(r => r.json())
+  .then(data => {
+    show('sDash');
+    records = (Array.isArray(data) ? data : []).map(fromDb);
+    renderDash();
+  })
+  .catch(err => showLoadError(err.toString()));
 }
 
 function showLoadError(msg) {
-  document.getElementById('recList').innerHTML =
-    '<div class="empty"><p style="color:var(--red);font-family:var(--mono);font-size:12px">Error al cargar: ' + msg + '</p>' +
+  const el = document.getElementById('recList');
+  if(el) el.innerHTML =
+    '<div class="empty"><p style="color:var(--red);font-family:var(--mono);font-size:12px">Error: ' + msg + '</p>' +
     '<button onclick="loadRecordsFromSheet()" style="margin-top:12px;padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Reintentar</button></div>';
 }
 
-// ════════════════════════════════════════
-//  GOOGLE SHEETS SYNC
-// ════════════════════════════════════════
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhp307Juku3w2dUK70DRFEQ24AsO6-2VVsJiWLIPNCc4AiuUa6Wm97LKBKvmmaRAtX/exec";
-
 async function sendToSheet(data) {
+  const SCRIPT_URL = "https://jojsrntfdrdgvnsgvpgc.supabase.co"; // unused, kept for compat
   try {
-    // Send main data without signature first
-    const mainData = Object.assign({}, data);
-    const signature = mainData.signature || '';
-    delete mainData.signature;
+    const dbData = toDb(data);
+    // Handle signature — send to Apps Script for PDF
+    if (data.status === 'closed' && data.signature) {
+      const APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzhp307Juku3w2dUK70DRFEQ24AsO6-2VVsJiWLIPNCc4AiuUa6Wm97LKBKvmmaRAtX/exec";
+      fetch(APPS_SCRIPT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          action:    'pdf',
+          lote:      data.lote,
+          folderId:  data.folderId || '',
+          signature: data.signature,
+          ...data
+        })
+      }).catch(()=>{});
+    }
 
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mainData)
-    });
+    // Check if record exists by lote
+    const check = await fetch(
+      SB_URL + '/rest/v1/' + SB_TABLE + '?lote=eq.' + encodeURIComponent(data.lote) + '&select=id',
+      { headers: sbHeaders() }
+    );
+    const existing = await check.json();
 
-    // If closed and has signature, send it separately
-    if (signature && data.status === 'closed') {
-      setTimeout(async () => {
-        try {
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action:    'firma',
-              lote:      data.lote,
-              folderId:  data.folderId || '',
-              signature: signature
-            })
-          });
-        } catch(e) {
-          console.error("Firma upload error:", e);
-        }
-      }, 1500);
+    if (existing && existing.length > 0) {
+      // Update
+      await fetch(
+        SB_URL + '/rest/v1/' + SB_TABLE + '?lote=eq.' + encodeURIComponent(data.lote),
+        { method: 'PATCH', headers: sbHeaders(), body: JSON.stringify(dbData) }
+      );
+    } else {
+      // Insert
+      await fetch(
+        SB_URL + '/rest/v1/' + SB_TABLE,
+        { method: 'POST', headers: sbHeaders(), body: JSON.stringify(dbData) }
+      );
     }
     return true;
   } catch(err) {
-    console.error("Sheet sync error:", err);
+    console.error("Supabase error:", err);
     return false;
   }
 }
