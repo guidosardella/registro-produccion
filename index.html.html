@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Registro de Producción | Pasta</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --blue:       #3d6fd4;
+  --blue-dark:  #2d56b0;
+  --blue-light: #eef3fc;
+  --blue-mid:   #dce7f9;
+  --accent:     #2a9d8f;
+  --accent-dim: rgba(42,157,143,0.12);
+  --red:        #e05252;
+  --red-dim:    rgba(224,82,82,0.1);
+  --orange:     #f4a261;
+  --orange-dim: rgba(244,162,97,0.12);
+  --bg:         #f0f4fb;
+  --surface:    #ffffff;
+  --surface2:   #f7f9fe;
+  --border:     #dde4f0;
+  --border2:    #c8d4ea;
+  --text:       #1a2340;
+  --text2:      #5a6a8a;
+  --text3:      #96a3bc;
+  --sans:       'Plus Jakarta Sans', sans-serif;
+  --mono:       'JetBrains Mono', monospace;
+  --shadow:     0 2px 12px rgba(61,111,212,0.08);
+  --shadow2:    0 4px 24px rgba(61,111,212,0.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ══ SCREENS ══ */
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ══ TOP BAR ══ */
+.topbar {
+  background: var(--blue);
+  color: #fff;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+  height: 56px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(45,86,176,0.3);
+}
+.topbar-back {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: background 0.15s;
+}
+.topbar-back:hover { background: rgba(255,255,255,0.25); }
+.topbar-title { font-size: 17px; font-weight: 700; flex: 1; letter-spacing: -0.01em; }
+.topbar-action {
+  background: rgba(255,255,255,0.18); border: none; color: #fff;
+  border-radius: 8px; padding: 7px 14px;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px;
+}
+.topbar-action:hover { background: rgba(255,255,255,0.28); }
+.topbar-cfg {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.topbar-cfg:hover { background: rgba(255,255,255,0.25); }
+
+/* ══ DASHBOARD ══ */
+.dash-hero {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  padding: 24px 20px 32px;
+  color: #fff;
+}
+.dash-hero h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.dash-hero p  { font-size: 13px; opacity: 0.75; margin-top: 4px; font-family: var(--mono); }
+
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 16px 8px; margin-top: -16px; }
+.stat-card {
+  background: var(--surface); border-radius: 14px; padding: 14px 16px;
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.stat-label { font-size: 11px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.stat-val   { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+.stat-val.blue   { color: var(--blue); }
+.stat-val.accent { color: var(--accent); }
+
+.list-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; }
+.list-label  { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.records-wrap { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; padding-bottom: 100px; }
+
+.rec-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow);
+  animation: fadeUp 0.2s ease both;
+}
+.rec-card:hover { transform: translateY(-1px); box-shadow: var(--shadow2); border-color: var(--border2); }
+.rec-card:active { transform: scale(0.99); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.rec-dot.open   { background: var(--orange); box-shadow: 0 0 0 3px var(--orange-dim); animation: blink 2s infinite; }
+.rec-dot.closed { background: var(--accent); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.rec-info { flex: 1; min-width: 0; }
+.rec-lote { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec-meta { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.rec-badge { font-size: 10px; font-family: var(--mono); font-weight: 500; padding: 4px 10px; border-radius: 20px; flex-shrink: 0; }
+.rec-badge.open   { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(244,162,97,0.3); }
+.rec-badge.closed { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(42,157,143,0.25); }
+
+.empty { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty svg { width: 44px; height: 44px; margin: 0 auto 12px; display: block; opacity: 0.35; }
+.empty p { font-size: 13px; font-family: var(--mono); }
+
+.fab {
+  position: fixed; bottom: 24px; right: 20px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--blue); border: none; color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(61,111,212,0.4); transition: all 0.15s; z-index: 50;
+}
+.fab:hover { background: var(--blue-dark); transform: scale(1.06); }
+.fab:active { transform: scale(0.96); }
+
+/* ══ FORM SCREEN ══ */
+.form-scroll { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+
+/* Section card */
+.section-card {
+  background: var(--surface); margin: 12px 16px 0;
+  border-radius: 16px; border: 1px solid var(--border);
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.section-card:last-of-type { margin-bottom: 0; }
+
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.section-head:hover { background: var(--blue-light); }
+.section-head.collapsed { border-bottom: none; }
+
+.section-head-left { display: flex; align-items: center; gap: 10px; }
+.section-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+.section-name { font-size: 14px; font-weight: 700; color: var(--blue); }
+.section-chevron { color: var(--text3); transition: transform 0.2s; }
+.section-chevron.open { transform: rotate(180deg); }
+
+.section-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.section-body.hidden { display: none; }
+
+/* Fields */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.field label {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.field label .req { color: var(--red); margin-left: 2px; }
+
+input[type=text], input[type=date], input[type=number],
+input[type=password], select, textarea {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-family: var(--sans); font-size: 14px;
+  padding: 10px 13px; outline: none; width: 100%;
+  -webkit-appearance: none; transition: all 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(61,111,212,0.12);
+  background: #fff;
+}
+input:disabled, select:disabled, textarea:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg); }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2396a3bc' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer;
+}
+select option { background: #fff; color: var(--text); }
+
+/* Calculated field */
+.calc-field {
+  background: var(--blue-light); border: 1.5px solid var(--blue-mid);
+  border-radius: 10px; padding: 10px 13px;
+  font-family: var(--mono); font-size: 16px; font-weight: 600;
+  color: var(--blue); letter-spacing: 0.05em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.calc-label { font-size: 11px; font-weight: 400; color: var(--text2); }
+
+/* Photo */
+.photo-area {
+  border: 2px dashed var(--border2); border-radius: 12px;
+  padding: 20px; text-align: center; cursor: pointer;
+  position: relative; overflow: hidden; transition: all 0.15s;
+}
+.photo-area:hover { border-color: var(--blue); background: var(--blue-light); }
+.photo-area.has-photo { border-color: var(--accent); background: var(--accent-dim); padding: 0; border-style: solid; }
+/* photo input is hidden, triggered via JS */
+.photo-ph svg   { width: 28px; height: 28px; color: var(--text3); margin: 0 auto 8px; display: block; }
+.photo-ph p     { font-size: 13px; color: var(--text2); font-weight: 500; }
+.photo-ph span  { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+#photoPreview   { display:none; width:100%; max-height:220px; object-fit:cover; border-radius:10px; }
+.photo-area.has-photo .photo-ph { display: none; }
+.photo-area.has-photo #photoPreview { display: block; }
+.photo-rm {
+  position: absolute; top:8px; right:8px;
+  width: 28px; height: 28px; background: rgba(255,255,255,0.9);
+  border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text2); display:none; align-items:center; justify-content:center;
+  cursor:pointer; z-index:3; font-size:14px; transition: all 0.15s; box-shadow: var(--shadow);
+}
+.photo-rm:hover { color: var(--red); border-color: var(--red); }
+.photo-area.has-photo .photo-rm { display:flex; }
+
+/* Signature */
+.sig-wrap {
+  border: 1.5px solid var(--border); border-radius: 12px;
+  overflow: hidden; position: relative; background: var(--surface2);
+  transition: all 0.15s;
+}
+.sig-wrap.active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(61,111,212,0.12); background: #fff; }
+.sig-wrap.disabled { opacity: 0.45; pointer-events: none; }
+#sigCanvas { display:block; width:100%; height:130px; cursor:crosshair; touch-action:none; }
+.sig-line { position:absolute; bottom:32px; left:20px; right:20px; height:1px; background:var(--border); pointer-events:none; }
+.sig-hint {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px; pointer-events:none; transition: opacity 0.2s;
+}
+.sig-hint.gone { opacity:0; }
+.sig-hint svg  { width:22px; height:22px; color:var(--text3); }
+.sig-hint span { font-size:12px; color:var(--text3); font-family:var(--mono); }
+.sig-footer { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+.sig-status { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text3); font-family:var(--mono); }
+.sig-status .dot { width:7px; height:7px; border-radius:50%; background:var(--border); transition:all 0.2s; }
+.sig-status .dot.on { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.sig-clr { background:none; border:1.5px solid var(--border); color:var(--text3); font-family:var(--mono); font-size:11px; padding:5px 10px; border-radius:8px; cursor:pointer; transition:all 0.15s; }
+.sig-clr:hover { border-color:var(--red); color:var(--red); }
+.sig-preview-wrap { border:1.5px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface2); }
+#sigPreviewImg { display:block; width:100%; height:130px; object-fit:contain; }
+
+/* Timestamp field */
+.timestamp-field {
+  background: var(--blue-light); border: 1.5px solid var(--blue-mid);
+  border-radius: 10px; padding: 10px 13px;
+  font-family: var(--mono); font-size: 13px; color: var(--blue);
+  display: flex; align-items: center; gap: 8px;
+}
+.timestamp-field svg { width:16px; height:16px; flex-shrink:0; }
+
+/* Closed notice */
+.closed-notice {
+  background: var(--accent-dim); border: 1px solid rgba(42,157,143,0.25);
+  border-radius: 12px; padding: 12px 16px; margin: 12px 16px 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.closed-notice svg { width:18px; height:18px; color:var(--accent); flex-shrink:0; }
+.closed-notice p  { font-size:13px; color:var(--accent); font-weight:600; }
+
+/* Required badge */
+.req-note { font-size:11px; color:var(--text3); padding:12px 16px 0; font-family:var(--mono); }
+.req-note span { color:var(--red); }
+
+/* Bottom actions */
+.form-actions {
+  position:fixed; bottom:0; left:0; right:0;
+  background: linear-gradient(to top, var(--bg) 65%, transparent);
+  padding: 12px 16px 28px; display:flex; flex-direction:column; gap:8px; z-index:20;
+}
+.btn {
+  width:100%; border:none; border-radius:12px;
+  font-family:var(--sans); font-size:14px; font-weight:700;
+  padding:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  gap:8px; transition:all 0.15s;
+}
+.btn-blue { background:var(--blue); color:#fff; box-shadow:0 4px 16px rgba(61,111,212,0.3); }
+.btn-blue:hover { background:var(--blue-dark); transform:translateY(-1px); box-shadow:0 6px 20px rgba(61,111,212,0.4); }
+.btn-blue:active { transform:translateY(0); }
+.btn-blue:disabled { background:var(--border); color:var(--text3); box-shadow:none; cursor:not-allowed; }
+.btn-outline { background:#fff; color:var(--text2); border:1.5px solid var(--border); }
+.btn-outline:hover { border-color:var(--border2); color:var(--text); }
+.btn-green { background:var(--accent); color:#fff; box-shadow:0 4px 16px rgba(42,157,143,0.3); }
+.btn-green:hover { background:#228f82; transform:translateY(-1px); box-shadow:0 6px 20px rgba(42,157,143,0.4); }
+.btn-green:active { transform:translateY(0); }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:90px; left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--text); color:#fff;
+  font-family:var(--mono); font-size:12px;
+  padding:10px 18px; border-radius:30px;
+  opacity:0; transition:all 0.22s; pointer-events:none; z-index:9998; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.ok   { background:var(--accent); }
+.toast.warn { background:var(--orange); }
+.toast.err  { background:var(--red); }
+
+/* ══ CONFIG SCREEN ══ */
+.pass-gate {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 24px; gap:20px; text-align:center;
+}
+.pass-icon { width:60px; height:60px; border-radius:18px; background:var(--blue-light); border:2px solid var(--blue-mid); display:flex; align-items:center; justify-content:center; }
+.pass-icon svg { width:26px; height:26px; color:var(--blue); }
+.pass-gate h2 { font-size:20px; font-weight:800; color:var(--text); }
+.pass-gate p  { font-size:13px; color:var(--text2); }
+.pass-gate input { max-width:260px; text-align:center; font-size:20px; letter-spacing:0.3em; font-family:var(--mono); }
+.pass-err { color:var(--red); font-family:var(--mono); font-size:12px; min-height:16px; }
+
+.cfg-body { flex:1; overflow-y:auto; padding:16px 16px 60px; display:flex; flex-direction:column; gap:16px; }
+
+.cfg-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); }
+.cfg-card-head { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.cfg-card-title { font-size:13px; font-weight:700; color:var(--blue); }
+.cfg-count { font-family:var(--mono); font-size:11px; color:var(--text3); background:var(--blue-light); border:1px solid var(--blue-mid); padding:2px 8px; border-radius:20px; }
+.cfg-items { display:flex; flex-direction:column; }
+.cfg-item { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--border); animation:fadeUp 0.2s ease both; }
+.cfg-item:last-child { border-bottom:none; }
+.cfg-item-txt { flex:1; font-size:14px; color:var(--text); }
+.cfg-del { width:28px; height:28px; border-radius:8px; background:none; border:1.5px solid transparent; color:var(--text3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.cfg-del:hover { border-color:var(--red); color:var(--red); background:var(--red-dim); }
+.cfg-add-row { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--surface2); }
+.cfg-add-row input { flex:1; font-size:13px; }
+.cfg-add-btn { background:var(--blue); color:#fff; border:none; border-radius:10px; padding:0 14px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:5px; transition:all 0.15s; }
+.cfg-add-btn:hover { background:var(--blue-dark); }
+
+.cfg-pw-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+.cfg-pw-card h3 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.cfg-pw-row { display:flex; gap:8px; }
+.cfg-pw-save { background:var(--blue-light); border:1.5px solid var(--blue-mid); color:var(--blue); border-radius:10px; padding:0 14px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+.cfg-pw-save:hover { background:var(--blue-mid); }
+.cfg-lock-btn { background:none; border:1.5px solid var(--border); color:var(--text2); border-radius:10px; padding:12px; font-family:var(--sans); font-size:13px; width:100%; cursor:pointer; transition:all 0.15s; margin-top:4px; }
+.cfg-lock-btn:hover { border-color:var(--red); color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div class="screen active" id="sDash">
+  <div class="topbar" style="justify-content:space-between">
+    <div class="topbar-title">Producción</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a id="navSheetLink" href="#" target="_blank" style="display:none;color:rgba(255,255,255,0.85);font-size:11px;font-family:var(--mono);text-decoration:none;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:8px;white-space:nowrap">📊 Sheet</a>
+      <div style="font-size:12px;opacity:0.75;font-family:var(--mono)" id="navClock">--:--</div>
+      <button class="topbar-cfg" onclick="openCfg()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="dash-hero">
+    <h1>Registro de Producción | Pasta</h1>
+    <p id="dashDate">—</p>
+  </div>
+
+  <div style="padding:0 16px 8px">
+    <a id="dashSheetBtn" href="#" target="_blank" onclick="return checkSheetUrl(event)" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;text-decoration:none;color:var(--blue);font-size:13px;font-weight:600;box-shadow:var(--shadow)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span id="dashSheetTxt">Ver registros en Google Sheet</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto;opacity:0.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </div>
+  <div class="list-header"><div class="list-label">Todos los registros</div></div>
+  <div class="records-wrap" id="recList">
+    <div class="empty" id="emptyState">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      <p>Sin registros aún.<br>Tocá + para crear uno.</p>
+    </div>
+  </div>
+  <button class="fab" onclick="openNew()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
+
+<!-- ══════════════ FORM ══════════════ -->
+<div class="screen" id="sForm">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="topbar-title" id="fTitle">Nuevo Registro</div>
+    <div id="fChip" style="font-size:11px;font-family:var(--mono);background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:20px">NUEVO</div>
+  </div>
+
+  <div class="form-scroll" id="formScroll">
+    <div id="closedBanner" class="closed-notice" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p>Registro cerrado — solo lectura</p>
+    </div>
+    <div class="req-note" style="margin-top:12px"><span>*</span> Campo obligatorio</div>
+
+    <!-- ① INFORMACIÓN DE LOTE -->
+    <div class="section-card">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-head-left"><div class="section-dot"></div><div class="section-name">Información de Lote</div></div>
+        <svg class="section-chevron open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Fecha <span class="req">*</span></label><input type="date" id="fFecha"/></div>
+          <div class="field"><label>Lote <span class="req">*</span></label><input type="text" id="fLote" placeholder="Ej: 240501"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Formato <span class="req">*</span></label><select id="fFormato"><option value="" disabled selected>Seleccionar...</option></select></div>
+          <div class="field"><label>Variedad <span class="req">*</span></label><select id="fVariedad"><option value="" disabled selected>Seleccionar...</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Lote Sémola</label><input type="text" id="fLoteSemola" placeholder="—"/></div>
+          <div class="field"><label>Lote Variedad</label><input type="text" id="fLoteVariedad" placeholder="—"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Secador <span class="req">*</span></label><select id="fSecador"><option value="" disabled selected>Seleccionar...</option></select></div>
+          <div class="field"><label>Programa</label><select id="fPrograma"><option value="" disabled selected>Seleccionar...</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② LIMPIEZA -->
+    <div class="section-card">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-head-left"><div class="section-dot" style="background:var(--orange)"></div><div class="section-name" style="color:var(--orange)">Limpieza</div></div>
+        <svg class="section-chevron open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="field"><label>Tipo de Limpieza <span class="req">*</span></label><select id="fTipoLimpieza"><option value="" disabled selected>Seleccionar...</option></select></div>
+        <div class="field"><label>Molde <span class="req">*</span></label><select id="fMolde"><option value="" disabled selected>Seleccionar...</option></select></div>
+      </div>
+    </div>
+
+    <!-- ③ MEDICIÓN DE HUMEDAD -->
+    <div class="section-card">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-head-left"><div class="section-dot" style="background:var(--blue)"></div><div class="section-name">Medición de Humedad</div></div>
+        <svg class="section-chevron open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Medición 1</label><input type="number" id="fHum1" placeholder="0.0" step="0.1" oninput="calcHumedad()"/></div>
+          <div class="field"><label>Medición 2</label><input type="number" id="fHum2" placeholder="0.0" step="0.1" oninput="calcHumedad()"/></div>
+        </div>
+        <div class="field"><label>Medición 3</label><input type="number" id="fHum3" placeholder="0.0" step="0.1" oninput="calcHumedad()"/></div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Humedad Final <span style="color:var(--text3);font-weight:400">(promedio)</span></div>
+          <div class="calc-field">
+            <span id="fHumFinal">—</span>
+            <span class="calc-label">% automático</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ ENVASADO -->
+    <div class="section-card">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-head-left"><div class="section-dot" style="background:var(--accent)"></div><div class="section-name" style="color:var(--accent)">Envasado</div></div>
+        <svg class="section-chevron open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Cant. Envasada <span class="req">*</span></label><input type="number" id="fCantEnv" placeholder="0" min="0"/></div>
+          <div class="field"><label>Cant. No Envasada</label><input type="number" id="fCantNoEnv" placeholder="0" min="0"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ CIERRE -->
+    <div class="section-card" style="margin-bottom:12px">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-head-left"><div class="section-dot" style="background:var(--red)"></div><div class="section-name" style="color:var(--red)">Cierre</div></div>
+        <svg class="section-chevron open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="field"><label>Observaciones</label><textarea id="fObs" rows="3" placeholder="Notas, incidencias..." style="resize:vertical"></textarea></div>
+        <div class="field">
+          <label>Imagen</label>
+          <div class="photo-area" id="photoArea">
+            <label for="photoInput" id="photoPh" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:100%">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:#96a3bc;margin-bottom:8px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p style="font-size:13px;color:#5a6a8a;font-weight:500">Tocá para fotografiar o adjuntar</p>
+              <span style="font-size:11px;color:#96a3bc;font-family:monospace">JPG, PNG — máx 5MB</span>
+            </label>
+            <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none"/>
+            <img id="photoPreview" alt="Foto" style="display:none;width:100%;max-height:220px;object-fit:cover;border-radius:10px"/>
+            <button type="button" id="photoRm" onclick="removePhoto(event)" style="display:none;position:absolute;top:8px;right:8px;width:28px;height:28px;background:rgba(255,255,255,0.9);border:1px solid #dde4f0;border-radius:50%;cursor:pointer;font-size:14px;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.1)">✕</button>
+          </div>
+        </div>
+        <div class="field"><label>Operador <span class="req">*</span></label><select id="fOperador"><option value="" disabled selected>Seleccionar...</option></select></div>
+        <div class="field">
+          <label>Firma Operador <span class="req">*</span></label>
+          <div id="sigPreviewWrap" class="sig-preview-wrap" style="display:none"><img id="sigPreviewImg" alt="Firma"/></div>
+          <div id="sigEditWrap">
+            <div class="sig-wrap" id="sigWrap">
+              <canvas id="sigCanvas"></canvas>
+              <div class="sig-line"></div>
+              <div class="sig-hint" id="sigHint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span>Firmar aquí</span>
+              </div>
+            </div>
+            <div class="sig-footer">
+              <div class="sig-status"><div class="dot" id="sigDot"></div><span id="sigTxt">Sin firma</span></div>
+              <button type="button" class="sig-clr" onclick="clearSig()">Limpiar</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Fecha y hora de cierre</label>
+          <div class="timestamp-field" id="tsDisplay">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="tsText">Se registrará al cerrar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /form-scroll -->
+
+  <div class="form-actions" id="fActions"></div>
+</div>
+
+
+<!-- ══════════════ CONFIG ══════════════ -->
+<div class="screen" id="sCfg">
+  <div class="topbar">
+    <button class="topbar-back" onclick="closeCfg()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="topbar-title">Configuración</div>
+  </div>
+
+  <div id="cfgBody" class="cfg-body">
+
+    <!-- Variedades -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Variedades</div><div class="cfg-count" id="cntVariedades">0</div></div>
+      <div class="cfg-items" id="lstVariedades"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inVariedad" placeholder="Nueva variedad..." onkeydown="if(event.key==='Enter')addCfg('variedades','inVariedad')"/>
+        <button class="cfg-add-btn" onclick="addCfg('variedades','inVariedad')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Formatos -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Formatos</div><div class="cfg-count" id="cntFormatos">0</div></div>
+      <div class="cfg-items" id="lstFormatos"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inFormato" placeholder="Nuevo formato..." onkeydown="if(event.key==='Enter')addCfg('formatos','inFormato')"/>
+        <button class="cfg-add-btn" onclick="addCfg('formatos','inFormato')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Secadores -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Secadores</div><div class="cfg-count" id="cntSecadores">0</div></div>
+      <div class="cfg-items" id="lstSecadores"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inSecador" placeholder="Nuevo secador..." onkeydown="if(event.key==='Enter')addCfg('secadores','inSecador')"/>
+        <button class="cfg-add-btn" onclick="addCfg('secadores','inSecador')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Programas -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Programas</div><div class="cfg-count" id="cntProgramas">0</div></div>
+      <div class="cfg-items" id="lstProgramas"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inPrograma" placeholder="Nuevo programa..." onkeydown="if(event.key==='Enter')addCfg('programas','inPrograma')"/>
+        <button class="cfg-add-btn" onclick="addCfg('programas','inPrograma')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Tipos de Limpieza -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Tipos de Limpieza</div><div class="cfg-count" id="cntLimpiezas">0</div></div>
+      <div class="cfg-items" id="lstLimpiezas"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inLimpieza" placeholder="Nuevo tipo..." onkeydown="if(event.key==='Enter')addCfg('limpiezas','inLimpieza')"/>
+        <button class="cfg-add-btn" onclick="addCfg('limpiezas','inLimpieza')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Moldes -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Moldes</div><div class="cfg-count" id="cntMoldes">0</div></div>
+      <div class="cfg-items" id="lstMoldes"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inMolde" placeholder="Nuevo molde..." onkeydown="if(event.key==='Enter')addCfg('moldes','inMolde')"/>
+        <button class="cfg-add-btn" onclick="addCfg('moldes','inMolde')">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Operadores -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">Operadores</div><div class="cfg-count" id="cntOperadores">0</div></div>
+      <div class="cfg-items" id="lstOperadores"></div>
+      <div class="cfg-add-row">
+        <input type="text" id="inOperador" placeholder="Nuevo operador..." onkeydown="if(event.key==='Enter')addCfg('operadores','inOperador')"/>
+        <button class="cfg-add-btn" onclick="addCfg('operadores','inOperador')">+ Agregar</button>
+      </div>
+    </div>
+
+
+    <!-- Firma folder -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">🗂 Carpeta de Firmas (Drive)</div></div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--text2)">ID de la carpeta de Drive donde se guardarán los PDFs de registros.</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="folderIdInput" placeholder="ID de carpeta de Drive..." style="flex:1;font-size:12px"/>
+          <button class="cfg-add-btn" onclick="saveFolderId()" style="white-space:nowrap">Guardar</button>
+        </div>
+        <div id="folderIdStatus" style="font-size:11px;color:var(--text3);font-family:monospace"></div>
+      </div>
+    </div>
+
+    <!-- Google Sheet link -->
+    <div class="cfg-card">
+      <div class="cfg-card-head"><div class="cfg-card-title">📊 Google Sheet</div></div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--text2)">Pegá la URL del Google Sheet (no el script)</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1;font-size:12px"/>
+          <button class="cfg-add-btn" onclick="saveSheetUrl()" style="white-space:nowrap">Guardar</button>
+        </div>
+        <a id="sheetLink" href="#" target="_blank" style="display:none;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Abrir Google Sheet
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let records = [];
+let cfg     = JSON.parse(localStorage.getItem('pConfig')  || 'null') || {
+  password:  '1234',
+  sheetUrl:   '',
+  variedades: ['SEMOLA','ESPINACA','PEPERONCINO','TINTA DE CALAMAR'],
+  formatos:   ['500g','1kg','5kg','10kg'],
+  secadores:  ['Secador 1','Secador 2','Secador 3'],
+  programas:  ['PLAN 1','PLAN 2','PLAN 3'],
+  limpiezas:  ['No se realiza / Cambio de producto o variedad','Regular diaria (limpieza y desinfección de mezcladoras)','Completa, con tornillo extrusor'],
+  moldes:     ['En agua','Lavado'],
+  operadores: ['Operador 1','Operador 2','Operador 3']
+};
+
+let curId=null, hasSig=false, photoData=null;
+
+const saveR = () => {}; // Sheet is source of truth
+const saveC = () => localStorage.setItem('pConfig',  JSON.stringify(cfg));
+
+// ── Clock ──
+function tick() {
+  const n = new Date();
+  document.getElementById('navClock').textContent = n.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dashDate').textContent  = n.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+tick(); setInterval(tick,1000);
+
+// ── Toast ──
+function toast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',2400);
+}
+
+// ── Screen ──
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════
+function renderDash() {
+  const list=document.getElementById('recList');
+  const empty=document.getElementById('emptyState');
+  if(!list || !empty) return;
+
+  Array.from(list.querySelectorAll('.rec-card')).forEach(n=>n.remove());
+  empty.style.display = records.length===0 ? '' : 'none';
+
+  [...records].sort((a,b)=>{
+    if(a.status!==b.status) return a.status==='open'?-1:1;
+    const da = a.createdAt||a.fecha||'', db = b.createdAt||b.fecha||'';
+    return da < db ? 1 : -1;
+  }).forEach((r,i)=>{
+    const c=document.createElement('div');
+    c.className='rec-card'; c.style.animationDelay=(i*.04)+'s';
+    c.innerHTML=`
+      <div class="rec-dot ${r.status}"></div>
+      <div class="rec-info">
+        <div class="rec-lote">Lote ${r.lote||'—'}</div>
+        <div class="rec-meta">${r.variedad||'—'} · ${r.formato||'—'} · ${fmtDate(r.fecha)}</div>
+      </div>
+      <div class="rec-badge ${r.status}">${r.status==='open'?'ABIERTO':'CERRADO'}</div>
+    `;
+    c.onclick=()=>openRec(r.lote);
+    list.appendChild(c);
+  });
+}
+
+function fmtDate(d) {
+  if(!d) return '—';
+  const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`;
+}
+function fmtTs(ts) {
+  if(!ts) return '—';
+  const d=new Date(ts);
+  return d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})
+    + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ════════════════════════════════════════
+//  SELECTS
+// ════════════════════════════════════════
+function fillSel(id, key, val) {
+  const el=document.getElementById(id);
+  el.innerHTML='<option value="" disabled>Seleccionar...</option>';
+  (cfg[key]||[]).forEach(item=>{
+    const o=document.createElement('option');
+    o.value=item; o.textContent=item;
+    if(item===val) o.selected=true;
+    el.appendChild(o);
+  });
+  if(!val) el.selectedIndex=0;
+}
+
+function fillAllSels(r) {
+  fillSel('fVariedad',     'variedades', r?.variedad);
+  fillSel('fFormato',      'formatos',   r?.formato);
+  fillSel('fSecador',      'secadores',  r?.secador);
+  fillSel('fPrograma',     'programas',  r?.programa);
+  fillSel('fTipoLimpieza', 'limpiezas',  r?.tipoLimpieza);
+  fillSel('fMolde',        'moldes',     r?.molde);
+  fillSel('fOperador',     'operadores', r?.operador);
+}
+
+// ════════════════════════════════════════
+//  NEW RECORD
+// ════════════════════════════════════════
+function openNew() {
+  curId=null; hasSig=false; photoData=null;
+  resetForm(); fillAllSels(null);
+  document.getElementById('fFecha').value=today();
+  document.getElementById('fTitle').textContent='Nuevo Registro';
+  setChip('NUEVO','rgba(255,255,255,0.2)');
+  document.getElementById('closedBanner').style.display='none';
+  document.getElementById('sigPreviewWrap').style.display='none';
+  document.getElementById('sigEditWrap').style.display='';
+  document.getElementById('tsText').textContent='Se registrará al cerrar';
+  setDisabled(false);
+  renderActions('new');
+  initSig();
+  show('sForm');
+}
+
+// ════════════════════════════════════════
+//  OPEN EXISTING
+// ════════════════════════════════════════
+function openRec(id) {
+  curId=id; hasSig=false;
+  const r=records.find(x=>x.lote===String(id)||x.id===String(id)); if(!r) return;
+  curId=r.lote;
+  photoData=r.photo||null;
+
+  document.getElementById('fTitle').textContent='Lote '+r.lote;
+  const isClosed=r.status==='closed';
+  setChip(isClosed?'CERRADO':'ABIERTO', isClosed?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.2)');
+
+  document.getElementById('fFecha').value        = r.fecha||'';
+  document.getElementById('fLote').value         = r.lote||'';
+  document.getElementById('fLoteSemola').value   = r.loteSemola||'';
+  document.getElementById('fLoteVariedad').value = r.loteVariedad||'';
+  document.getElementById('fHum1').value         = r.hum1||'';
+  document.getElementById('fHum2').value         = r.hum2||'';
+  document.getElementById('fHum3').value         = r.hum3||'';
+  document.getElementById('fCantEnv').value      = r.cantEnv||'';
+  document.getElementById('fCantNoEnv').value    = r.cantNoEnv||'';
+  document.getElementById('fObs').value          = r.obs||'';
+  calcHumedad();
+  fillAllSels(r);
+
+  // Photo
+  const pa=document.getElementById('photoArea'), pp=document.getElementById('photoPreview');
+  if(r.photo){ pp.src=r.photo; pp.style.display='block'; pa.classList.add('has-photo'); }
+  else       { pp.src=''; pp.style.display='none'; pa.classList.remove('has-photo'); }
+
+  // Timestamp
+  document.getElementById('tsText').textContent = r.closedAt ? fmtTs(r.closedAt) : 'Se registrará al cerrar';
+
+  document.getElementById('closedBanner').style.display = isClosed?'':'none';
+
+  if(isClosed) {
+    document.getElementById('sigEditWrap').style.display='none';
+    const pw=document.getElementById('sigPreviewWrap'), pi=document.getElementById('sigPreviewImg');
+    if(r.signature){ pi.src=r.signature; pw.style.display=''; } else pw.style.display='none';
+    setDisabled(true);
+    document.getElementById('photoInput').disabled=true;
+    renderActions('closed');
+  } else {
+    document.getElementById('sigPreviewWrap').style.display='none';
+    document.getElementById('sigEditWrap').style.display='';
+    setDisabled(false);
+    renderActions('open');
+    initSig();
+  }
+  show('sForm');
+}
+
+// ════════════════════════════════════════
+//  SAVE
+// ════════════════════════════════════════
+function saveRec(status) {
+  const lote     = document.getElementById('fLote').value.trim();
+  const fecha    = document.getElementById('fFecha').value;
+  const variedad = document.getElementById('fVariedad').value;
+  const formato  = document.getElementById('fFormato').value;
+  const secador  = document.getElementById('fSecador').value;
+  const operador = document.getElementById('fOperador').value;
+  const cantEnv  = document.getElementById('fCantEnv').value;
+
+  if(!lote) { toast('⚠ El número de lote es obligatorio','warn'); return; }
+  if(status==='closed'&&!hasSig) {
+    const w=document.getElementById('sigWrap');
+    w.style.borderColor='var(--red)'; w.style.boxShadow='0 0 0 3px rgba(224,82,82,0.15)';
+    document.getElementById('sigTxt').style.color='var(--red)';
+    document.getElementById('sigTxt').textContent='⚠ Requerida';
+    setTimeout(()=>{ w.style.borderColor=''; w.style.boxShadow=''; },2000);
+    toast('⚠ Se requiere la firma para cerrar','warn'); return;
+  }
+
+  const signature = status==='closed' ? getSig() : null;
+  const closedAt  = status==='closed' ? new Date().toISOString() : null;
+
+  const data = {
+    lote, fecha, variedad, formato, secador, operador,
+    programa:      document.getElementById('fPrograma').value,
+    loteSemola:    document.getElementById('fLoteSemola').value,
+    loteVariedad:  document.getElementById('fLoteVariedad').value,
+    tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
+    molde:         document.getElementById('fMolde').value,
+    hum1:          document.getElementById('fHum1').value,
+    hum2:          document.getElementById('fHum2').value,
+    hum3:          document.getElementById('fHum3').value,
+    humFinal:      document.getElementById('fHumFinal').textContent,
+    cantEnv:       document.getElementById('fCantEnv').value,
+    cantNoEnv:     document.getElementById('fCantNoEnv').value,
+    obs:           document.getElementById('fObs').value,
+    photo:         photoData!==null ? photoData : (curId ? records.find(r=>r.id===curId)?.photo||null : null),
+    signature:     signature || (curId ? records.find(r=>r.id===curId)?.signature||null : null),
+    closedAt:      closedAt  || (curId ? records.find(r=>r.id===curId)?.closedAt||null  : null),
+    status
+  };
+
+  // Update local records
+  if(curId===null) {
+    const rec={id:'new_' + Date.now(), createdAt:new Date().toISOString(),
+      status, lote,
+      fecha:         document.getElementById('fFecha').value,
+      variedad:      document.getElementById('fVariedad').value,
+      formato:       document.getElementById('fFormato').value,
+      loteSemola:    document.getElementById('fLoteSemola').value,
+      loteVariedad:  document.getElementById('fLoteVariedad').value,
+      secador:       document.getElementById('fSecador').value,
+      programa:      document.getElementById('fPrograma').value,
+      tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
+      molde:         document.getElementById('fMolde').value,
+      hum1:          document.getElementById('fHum1').value,
+      hum2:          document.getElementById('fHum2').value,
+      hum3:          document.getElementById('fHum3').value,
+      humFinal:      document.getElementById('fHumFinal').textContent,
+      cantEnv:       document.getElementById('fCantEnv').value,
+      cantNoEnv:     document.getElementById('fCantNoEnv').value,
+      obs:           document.getElementById('fObs').value,
+      operador:      document.getElementById('fOperador').value,
+      closedAt:      status==='closed' ? new Date().toISOString() : null
+    };
+    records.unshift(rec); curId='lote:'+lote;
+  } else {
+    const idx=records.findIndex(r=>r.lote===lote||r.id===curId);
+    if(idx!==-1) records[idx]={...records[idx],
+      status, lote,
+      fecha:         document.getElementById('fFecha').value,
+      variedad:      document.getElementById('fVariedad').value,
+      formato:       document.getElementById('fFormato').value,
+      loteSemola:    document.getElementById('fLoteSemola').value,
+      loteVariedad:  document.getElementById('fLoteVariedad').value,
+      secador:       document.getElementById('fSecador').value,
+      programa:      document.getElementById('fPrograma').value,
+      tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
+      molde:         document.getElementById('fMolde').value,
+      hum1:          document.getElementById('fHum1').value,
+      hum2:          document.getElementById('fHum2').value,
+      hum3:          document.getElementById('fHum3').value,
+      humFinal:      document.getElementById('fHumFinal').textContent,
+      cantEnv:       document.getElementById('fCantEnv').value,
+      cantNoEnv:     document.getElementById('fCantNoEnv').value,
+      obs:           document.getElementById('fObs').value,
+      operador:      document.getElementById('fOperador').value,
+      closedAt:      status==='closed' ? new Date().toISOString() : (records.find(r=>r.id===curId)||{}).closedAt||null
+    };
+  }
+  saveR();
+
+  // Send to Sheet
+  const payload = {
+    status,
+    lote,
+    fecha:         document.getElementById('fFecha').value,
+    variedad:      document.getElementById('fVariedad').value,
+    formato:       document.getElementById('fFormato').value,
+    loteSemola:    document.getElementById('fLoteSemola').value,
+    loteVariedad:  document.getElementById('fLoteVariedad').value,
+    secador:       document.getElementById('fSecador').value,
+    programa:      document.getElementById('fPrograma').value,
+    tipoLimpieza:  document.getElementById('fTipoLimpieza').value,
+    molde:         document.getElementById('fMolde').value,
+    hum1:          document.getElementById('fHum1').value,
+    hum2:          document.getElementById('fHum2').value,
+    hum3:          document.getElementById('fHum3').value,
+    humFinal:      document.getElementById('fHumFinal').textContent,
+    cantEnv:       document.getElementById('fCantEnv').value,
+    cantNoEnv:     document.getElementById('fCantNoEnv').value,
+    obs:           document.getElementById('fObs').value,
+    operador:      document.getElementById('fOperador').value,
+    closedAt:      status === 'closed' ? new Date().toISOString() : (records.find(r=>r.lote===lote)||{}).closedAt||'',
+    signature:     status === 'closed' && hasSig ? getSig() : '',
+    folderId:      cfg.folderId || ''
+  };
+  sendToSheet(payload);
+
+  // Sync to Google Sheets
+  const recToSync = records.find(r=>r.id===curId);
+  if(recToSync) {
+    const payload = {
+      status:        recToSync.status,
+      fecha:         recToSync.fecha        || '',
+      lote:          recToSync.lote         || '',
+      variedad:      recToSync.variedad     || '',
+      formato:       recToSync.formato      || '',
+      loteSemola:    recToSync.loteSemola   || '',
+      loteVariedad:  recToSync.loteVariedad || '',
+      secador:       recToSync.secador      || '',
+      programa:      recToSync.programa     || '',
+      tipoLimpieza:  recToSync.tipoLimpieza || '',
+      molde:         recToSync.molde        || '',
+      hum1:          recToSync.hum1         || '',
+      hum2:          recToSync.hum2         || '',
+      hum3:          recToSync.hum3         || '',
+      humFinal:      recToSync.humFinal     || '',
+      cantEnv:       recToSync.cantEnv      || '',
+      cantNoEnv:     recToSync.cantNoEnv    || '',
+      obs:           recToSync.obs          || '',
+      operador:      recToSync.operador     || '',
+      closedAt:      recToSync.closedAt     || ''
+    };
+    sendToSheet(payload);
+  }
+
+  toast(status==='closed'?'✓ Registro cerrado y guardado':'✓ Guardado correctamente','ok');
+  setTimeout(()=>{ show('sDash'); loadSheetUrl(); loadRecordsFromSheet(); },700);
+}
+
+// ════════════════════════════════════════
+//  HUMIDITY CALC
+// ════════════════════════════════════════
+function calcHumedad() {
+  const v=[document.getElementById('fHum1').value, document.getElementById('fHum2').value, document.getElementById('fHum3').value]
+    .map(Number).filter(n=>!isNaN(n)&&n>0);
+  const el=document.getElementById('fHumFinal');
+  if(v.length===0){ el.textContent='—'; return; }
+  const avg=(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2);
+  el.textContent=avg+' %';
+}
+
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+function today() { return new Date().toISOString().split('T')[0]; }
+function goBack() { renderDash(); show('sDash'); }
+
+function setChip(label, bg) {
+  const c=document.getElementById('fChip');
+  c.textContent=label; c.style.background=bg;
+}
+
+function renderActions(mode) {
+  const el=document.getElementById('fActions');
+  const saveIcon=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
+  const closeIcon=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  if(mode==='new'||mode==='open') {
+    el.innerHTML=`
+      <button class="btn btn-blue" onclick="saveRec('open')">${saveIcon}Guardar y dejar abierto</button>
+      <button class="btn btn-green" onclick="saveRec('closed')">${closeIcon}Guardar y cerrar</button>`;
+  } else {
+    el.innerHTML=`<button class="btn btn-outline" onclick="goBack()">Volver al listado</button>`;
+  }
+}
+
+function resetForm() {
+  ['fLote','fLoteSemola','fLoteVariedad','fHum1','fHum2','fHum3','fCantEnv','fCantNoEnv','fObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fFecha').value='';
+  document.getElementById('fHumFinal').textContent='—';
+  document.getElementById('photoPreview').src='';
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoArea').classList.remove('has-photo');
+  document.getElementById('photoPh').style.display='';
+  document.getElementById('photoRm').style.display='none';
+  document.getElementById('photoInput').value=''; photoData=null;
+}
+
+function setDisabled(d) {
+  ['fFecha','fLote','fVariedad','fFormato','fSecador','fPrograma','fLoteSemola','fLoteVariedad',
+   'fTipoLimpieza','fMolde','fHum1','fHum2','fHum3','fCantEnv','fCantNoEnv','fObs','fOperador']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=d; });
+  document.getElementById('sigWrap').classList.toggle('disabled',d);
+  document.getElementById('photoInput').disabled=d;
+  const pa=document.getElementById('photoArea');
+  pa.style.cursor=d?'default':'pointer';
+  pa.onclick=d?null:triggerPhoto;
+}
+
+// ── Sections collapsible ──
+function toggleSection(head) {
+  const body=head.nextElementSibling;
+  const chev=head.querySelector('.section-chevron');
+  const collapsed=body.classList.toggle('hidden');
+  chev.classList.toggle('open',!collapsed);
+  head.classList.toggle('collapsed',collapsed);
+}
+
+// ── Photo ──
+function triggerPhoto() {
+  const inp = document.getElementById('photoInput');
+  if (inp && !inp.disabled) inp.click();
+}
+function handlePhoto(e) {
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>5*1024*1024){ toast('⚠ Imagen muy grande (máx 5MB)','warn'); return; }
+  const r=new FileReader();
+  r.onload=ev=>{
+    photoData=ev.target.result;
+    const p=document.getElementById('photoPreview');
+    p.src=photoData; p.style.display='block';
+    document.getElementById('photoArea').classList.add('has-photo');
+    document.getElementById('photoPh').style.display='none';
+    document.getElementById('photoRm').style.display='flex';
+  };
+  r.readAsDataURL(f);
+}
+function removePhoto(e) {
+  e.stopPropagation(); photoData=null;
+  const p=document.getElementById('photoPreview'); p.src=''; p.style.display='none';
+  document.getElementById('photoArea').classList.remove('has-photo');
+  document.getElementById('photoPh').style.display='';
+  document.getElementById('photoRm').style.display='none';
+  document.getElementById('photoInput').value='';
+}
+
+// ── Signature ──
+let sigDrawing = false;
+
+function initSig() {
+  hasSig = false;
+  sigDrawing = false;
+  document.getElementById('sigDot').classList.remove('on');
+  document.getElementById('sigTxt').textContent = 'Sin firma';
+  document.getElementById('sigTxt').style.color = '';
+  document.getElementById('sigHint').classList.remove('gone');
+  document.getElementById('sigWrap').classList.remove('active');
+
+  setTimeout(() => {
+    const canvas = document.getElementById('sigCanvas');
+    const wrap   = document.getElementById('sigWrap');
+    if (!canvas || !wrap) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W   = wrap.clientWidth;
+    const H   = 130;
+
+    canvas.width        = W * dpr;
+    canvas.height       = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = '#3d6fd4';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    function getPos(e) {
+      const rect   = canvas.getBoundingClientRect();
+      const scaleX = (canvas.width  / dpr) / rect.width;
+      const scaleY = (canvas.height / dpr) / rect.height;
+      const src    = e.touches ? e.changedTouches[0] : e;
+      return {
+        x: (src.clientX - rect.left) * scaleX,
+        y: (src.clientY - rect.top)  * scaleY
+      };
+    }
+
+    function markSigned() {
+      if (!hasSig) {
+        hasSig = true;
+        document.getElementById('sigHint').classList.add('gone');
+        document.getElementById('sigDot').classList.add('on');
+        document.getElementById('sigTxt').textContent = 'Firmado ✓';
+        document.getElementById('sigTxt').style.color = 'var(--accent)';
+      }
+    }
+
+    canvas.onmousedown  = e => { sigDrawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); wrap.classList.add('active'); };
+    canvas.onmousemove  = e => { if(!sigDrawing)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); markSigned(); };
+    canvas.onmouseup    = () => { sigDrawing=false; ctx.beginPath(); };
+    canvas.onmouseleave = () => { sigDrawing=false; ctx.beginPath(); };
+
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault(); sigDrawing=true;
+      const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
+      wrap.classList.add('active');
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!sigDrawing) return;
+      const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); markSigned();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => { sigDrawing=false; ctx.beginPath(); });
+
+  }, 200);
+}
+
+function getSig() {
+  return document.getElementById('sigCanvas').toDataURL('image/png');
+}
+
+function clearSig() {
+  const canvas = document.getElementById('sigCanvas');
+  const dpr    = window.devicePixelRatio || 1;
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  hasSig = false;
+  sigDrawing = false;
+  document.getElementById('sigHint').classList.remove('gone');
+  document.getElementById('sigDot').classList.remove('on');
+  document.getElementById('sigTxt').textContent = 'Sin firma';
+  document.getElementById('sigTxt').style.color = '';
+  document.getElementById('sigWrap').classList.remove('active');
+}
+
+
+// ════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════
+function openCfg() {
+  renderCfg();
+  loadSheetUrl();
+  loadFolderId();
+  show('sCfg');
+}
+function closeCfg() { renderDash(); show('sDash'); }
+
+const CFG_MAP=[
+  ['variedades','lstVariedades','cntVariedades'],
+  ['formatos','lstFormatos','cntFormatos'],
+  ['secadores','lstSecadores','cntSecadores'],
+  ['programas','lstProgramas','cntProgramas'],
+  ['limpiezas','lstLimpiezas','cntLimpiezas'],
+  ['moldes','lstMoldes','cntMoldes'],
+  ['operadores','lstOperadores','cntOperadores'],
+];
+
+function renderCfg() {
+  CFG_MAP.forEach(([key,listId,cntId])=>{
+    const cnt=document.getElementById(cntId), list=document.getElementById(listId);
+    const items=cfg[key]||[];
+    cnt.textContent=items.length; list.innerHTML='';
+    items.forEach((item,i)=>{
+      const d=document.createElement('div'); d.className='cfg-item'; d.style.animationDelay=(i*.03)+'s';
+      d.innerHTML=`<div class="cfg-item-txt">${item}</div><button class="cfg-del" onclick="delCfg('${key}',${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      list.appendChild(d);
+    });
+  });
+}
+
+function addCfg(key,inputId) {
+  const inp=document.getElementById(inputId), val=inp.value.trim();
+  if(!val) return;
+  if(!cfg[key]) cfg[key]=[];
+  if(cfg[key].includes(val)){ toast('⚠ Ya existe','warn'); return; }
+  cfg[key].push(val); saveC(); inp.value=''; renderCfg(); toast('✓ Agregado','ok');
+}
+
+function delCfg(key,idx) {
+  cfg[key].splice(idx,1); saveC(); renderCfg(); toast('Eliminado');
+}
+
+// ── Sheet URL ──
+function saveFolderId() {
+  const val = document.getElementById('folderIdInput').value.trim();
+  cfg.folderId = val;
+  saveC();
+  document.getElementById('folderIdStatus').textContent = val ? '✓ ID guardado: ' + val : 'Usando carpeta por defecto';
+  toast('✓ Carpeta guardada', 'ok');
+}
+
+function loadFolderId() {
+  const inp = document.getElementById('folderIdInput');
+  const sts = document.getElementById('folderIdStatus');
+  if (!inp) return;
+  const val = cfg.folderId || '';
+  inp.value = val;
+  if (sts) sts.textContent = val ? '✓ ID: ' + val : '';
+}
+
+function saveSheetUrl() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if(!url){ toast('⚠ Ingresá un link','warn'); return; }
+  cfg.sheetUrl = url; saveC();
+  updateSheetLinks(url);
+  toast('✓ Link guardado','ok');
+}
+function loadSheetUrl() {
+  const url = cfg.sheetUrl || '';
+  const inp = document.getElementById('sheetUrl');
+  if(inp) inp.value = url;
+  updateSheetLinks(url);
+}
+function updateSheetLinks(url) {
+  const lnk  = document.getElementById('sheetLink');
+  const nav  = document.getElementById('navSheetLink');
+  const dash = document.getElementById('dashSheetBtn');
+  const txt  = document.getElementById('dashSheetTxt');
+  if(url) {
+    if(dash){ dash.href=url; dash.style.opacity='1'; dash.style.pointerEvents=''; }
+    if(txt)  txt.textContent='Ver registros en Google Sheet';
+    if(lnk){ lnk.href=url; lnk.style.display='flex'; }
+    if(nav){ nav.href=url; nav.style.display=''; }
+  } else {
+    if(dash){ dash.href='#'; dash.style.opacity='0.45'; dash.style.pointerEvents='none'; }
+    if(txt)  txt.textContent='Sheet no configurado — ir a Configuración';
+    if(lnk)  lnk.style.display='none';
+    if(nav)  nav.style.display='none';
+  }
+}
+function checkSheetUrl(e) {
+  if(!cfg.sheetUrl){ e.preventDefault(); toast('⚠ Configurá el link al Sheet primero','warn'); return false; }
+  return true;
+}
+
+// ════════════════════════════════════════
+//  LOAD RECORDS FROM SHEET
+// ════════════════════════════════════════
+function loadRecordsFromSheet() {
+  const listEl = document.getElementById('recList');
+  if(listEl) listEl.innerHTML = '<div class="empty"><p style="color:var(--text3);font-family:var(--mono);font-size:13px">Cargando registros...</p></div>';
+
+  fetch(SCRIPT_URL + '?action=get', {
+      redirect: 'follow',
+      headers: { 'Accept': 'application/json, text/javascript, */*' }
+    })
+    .then(r => r.text())
+    .then(text => {
+      // Strip any JSONP wrapper or BOM if present
+      var clean = text.trim().replace(/^﻿/, '');
+      if (clean.startsWith('gsCb') || clean.indexOf('(') < 10) {
+        clean = clean.substring(clean.indexOf('(') + 1, clean.lastIndexOf(')'));
+      }
+      const data = JSON.parse(clean);
+      if (data.ok) {
+        show('sDash');
+        records = (data.records || []).map(r => ({
+          id:           r.id           || '',
+          status:       r.status       || 'open',
+          fecha:        cleanDate(r.fecha),
+          lote:         r.lote         || '',
+          variedad:     r.variedad     || '',
+          formato:      r.formato      || '',
+          loteSemola:   r.loteSemola   || '',
+          loteVariedad: r.loteVariedad || '',
+          secador:      r.secador      || '',
+          programa:     r.programa     || '',
+          tipoLimpieza: r.tipoLimpieza || '',
+          molde:        r.molde        || '',
+          hum1:         r.hum1         || '',
+          hum2:         r.hum2         || '',
+          hum3:         r.hum3         || '',
+          humFinal:     r.humFinal     || '',
+          cantEnv:      r.cantEnv      || '',
+          cantNoEnv:    r.cantNoEnv    || '',
+          obs:          r.obs          || '',
+          operador:     r.operador     || '',
+          closedAt:     r.closedAt     || '',
+          createdAt:    r.fecha        || ''
+        }));
+        renderDash();
+      } else {
+        showLoadError(data.error || 'Error desconocido');
+      }
+    })
+    .catch(err => showLoadError(err.toString()));
+}
+
+function showLoadError(msg) {
+  document.getElementById('recList').innerHTML =
+    '<div class="empty"><p style="color:var(--red);font-family:var(--mono);font-size:12px">Error al cargar: ' + msg + '</p>' +
+    '<button onclick="loadRecordsFromSheet()" style="margin-top:12px;padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Reintentar</button></div>';
+}
+
+// ════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhp307Juku3w2dUK70DRFEQ24AsO6-2VVsJiWLIPNCc4AiuUa6Wm97LKBKvmmaRAtX/exec";
+
+async function sendToSheet(data) {
+  try {
+    // Send main data without signature first
+    const mainData = Object.assign({}, data);
+    const signature = mainData.signature || '';
+    delete mainData.signature;
+
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(mainData)
+    });
+
+    // If closed and has signature, send it separately
+    if (signature && data.status === 'closed') {
+      setTimeout(async () => {
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action:    'firma',
+              lote:      data.lote,
+              folderId:  data.folderId || '',
+              signature: signature
+            })
+          });
+        } catch(e) {
+          console.error("Firma upload error:", e);
+        }
+      }, 1500);
+    }
+    return true;
+  } catch(err) {
+    console.error("Sheet sync error:", err);
+    return false;
+  }
+}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+renderDash();
+
+
+</script>
+</body>
+</html>
